@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Contact — Sanjana Kumari</title>
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="logo" href="index.html">Sanjana Kumari</a>
+      <nav class="nav">
+        <a href="index.html">About</a>
+        <a href="projects.html">Projects</a>
+        <a href="contact.html">Contact</a>
+      </nav>
+      <button class="nav-toggle">☰</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <h1>Contact</h1>
+    <p>Want to collaborate? Send a message using the form below — this example doesn't send emails but shows validation and a friendly UI.</p>
+
+    <form id="contactForm" class="contact-form" novalidate>
+      <label>
+        Name
+        <input name="name" required />
+      </label>
+      <label>
+        Email
+        <input name="email" type="email" required />
+      </label>
+      <label>
+        Message
+        <textarea name="message" rows="5" required></textarea>
+      </label>
+      <button class="btn" type="submit">Send message</button>
+      <div id="msg" class="form-msg" aria-live="polite"></div>
+    </form>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>&copy; <span id="year3"></span> Sanjana Kumari</small>
+    </div>
+  </footer>
+
+  <script>
+    // Form behaviour + site year + mobile nav toggle
+    document.getElementById('year')?.textContent = new Date().getFullYear();
+    document.getElementById('year2')?.textContent = new Date().getFullYear();
+    document.getElementById('year3')?.textContent = new Date().getFullYear();
+
+    // Simple contact form behaviour
+    const form = document.getElementById('contactForm');
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      document.getElementById('msg').textContent = `Thanks, ${data.get('name')}! Message received (demo).`;
+      form.reset();
+    });
+
+    // Mobile menu toggle
+    document.querySelectorAll('.nav-toggle').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const nav = document.querySelector('.nav');
+        const expanded = btn.getAttribute('aria-expanded') === 'true';
+        btn.setAttribute('aria-expanded', String(!expanded));
+        nav?.classList.toggle('open');
+      });
+    });
+  </script>
+</body>
+</html>

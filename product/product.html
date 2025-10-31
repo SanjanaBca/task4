@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Product Filter & Sort</title>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;margin:0;background:#f5f7fb;color:#111;padding:1rem}
+  .wrap{max-width:1100px;margin:0 auto}
+  header{display:flex;gap:1rem;align-items:center;justify-content:space-between}
+  .controls{display:flex;gap:.6rem;flex-wrap:wrap;margin:1rem 0}
+  select,input{padding:.5rem;border-radius:8px;border:1px solid #ddd}
+  .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:1rem}
+  .card{background:#fff;padding:1rem;border-radius:10px;box-shadow:0 6px 20px rgba(12,30,60,.06)}
+  .meta{font-size:.85rem;color:#666;margin-top:.4rem}
+  @media (max-width:900px){ .grid{grid-template-columns:repeat(2,1fr)} }
+  @media (max-width:600px){ .grid{grid-template-columns:1fr} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h2>Products</h2>
+    <div id="summary"></div>
+  </header>
+
+  <div class="controls">
+    <label>Category:
+      <select id="cat">
+        <option value="all">All</option>
+      </select>
+    </label>
+
+    <label>Max price:
+      <input id="maxPrice" type="number" min="0" placeholder="e.g. 1000" />
+    </label>
+
+    <label>Sort:
+      <select id="sort">
+        <option value="best">Best match</option>
+        <option value="price-asc">Price: Low → High</option>
+        <option value="price-desc">Price: High → Low</option>
+        <option value="rating-desc">Rating</option>
+      </select>
+    </label>
+
+    <label style="margin-left:auto">Search:
+      <input id="q" placeholder="search name..." />
+    </label>
+  </div>
+
+  <div class="grid" id="grid"></div>
+</div>
+
+<script>
+  // sample product data
+  const products = [
+    { id:1, name:'Classic Backpack', category:'Bags', price:1299, rating:4.5 },
+    { id:2, name:'Wireless Earbuds', category:'Electronics', price:2499, rating:4.2 },
+    { id:3, name:'Scented Candle', category:'Home', price:399, rating:4.8 },
+    { id:4, name:'Travel Mug', category:'Home', price:499, rating:4.1 },
+    { id:5, name:'Running Shoes', category:'Footwear', price:3499, rating:4.6 },
+    { id:6, name:'Denim Jacket', category:'Clothing', price:2199, rating:4.3 },
+    { id:7, name:'Bluetooth Speaker', category:'Electronics', price:1999, rating:4.4 },
+    { id:8, name:'Leather Wallet', category:'Bags', price:899, rating:4.0 },
+    { id:9, name:'Yoga Mat', category:'Fitness', price:999, rating:4.7 }
+  ];
+
+  const grid = document.getElementById('grid');
+  const cat = document.getElementById('cat');
+  const maxPrice = document.getElementById('maxPrice');
+  const sort = document.getElementById('sort');
+  const q = document.getElementById('q');
+  const summary = document.getElementById('summary');
+
+  // populate categories
+  const cats = Array.from(new Set(products.map(p=>p.category)));
+  cats.forEach(c => {
+    const opt = document.createElement('option'); opt.value = c; opt.textContent = c; cat.appendChild(opt);
+  });
+
+  function render(){
+    let out = products.slice();
+
+    // search
+    const term = q.value.trim().toLowerCase();
+    if (term) out = out.filter(p => p.name.toLowerCase().includes(term));
+
+    // category
+    if (cat.value !== 'all') out = out.filter(p => p.category === cat.value);
+
+    // max price
+    const max = Number(maxPrice.value);
+    if (max) out = out.filter(p => p.price <= max);
+
+    // sort
+    if (sort.value === 'price-asc') out.sort((a,b)=>a.price-b.price);
+    if (sort.value === 'price-desc') out.sort((a,b)=>b.price-a.price);
+    if (sort.value === 'rating-desc') out.sort((a,b)=>b.rating-b.rating?b.rating-a.rating:0);
+
+    // summary
+    summary.textContent = `${out.length} products`;
+
+    grid.innerHTML = out.map(p => `
+      <div class="card">
+        <h3>${escapeHtml(p.name)}</h3>
+        <div class="meta">${p.category} · ₹${p.price} · ★ ${p.rating}</div>
+        <p style="margin-top:.6rem"><button data-id="${p.id}">View / Add to cart</button></p>
+      </div>`).join('');
+  }
+
+  function escapeHtml(s){ return String(s).replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+  // events
+  [cat, maxPrice, sort, q].forEach(el => el.addEventListener('input', render));
+
+  // initial render
+  render();
+
+  // click handler for product buttons (demo)
+  grid.addEventListener('click', e=>{
+    const btn = e.target.closest('button[data-id]');
+    if (!btn) return;
+    const id = Number(btn.dataset.id);
+    const p = products.find(x=>x.id===id);
+    alert(`"${p.name}" selected — demo only.`);
+  });
+</script>
+</body>
+</html>

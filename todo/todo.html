@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Advanced To-Do App</title>
+  <style>
+    :root {
+      --primary: #2563eb;
+      --secondary: #1e40af;
+      --success: #16a34a;
+      --danger: #dc2626;
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --radius: 12px;
+      --shadow: 0 8px 25px rgba(0,0,0,0.08);
+      font-family: 'Poppins', sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+      padding-top: 40px;
+    }
+
+    .todo-container {
+      background: var(--card);
+      width: 90%;
+      max-width: 500px;
+      padding: 2rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: fadeIn 0.5s ease;
+    }
+
+    h1 {
+      text-align: center;
+      color: var(--primary);
+      margin-bottom: 1rem;
+    }
+
+    .stats {
+      display: flex;
+      justify-content: space-around;
+      background: #eff6ff;
+      border-radius: var(--radius);
+      padding: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .stats div {
+      font-size: 0.9rem;
+      color: var(--secondary);
+      font-weight: 600;
+    }
+
+    .input-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    input, select {
+      flex: 1;
+      padding: 0.6rem;
+      border-radius: var(--radius);
+      border: 1px solid #d1d5db;
+      font-size: 0.9rem;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: var(--radius);
+      padding: 0.6rem 1rem;
+      font-weight: 600;
+      transition: 0.3s;
+    }
+
+    #addBtn {
+      background: linear-gradient(135deg, #2563eb, #60a5fa);
+      color: #fff;
+    }
+    #addBtn:hover { transform: translateY(-2px); }
+
+    ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    li {
+      background: #f1f5f9;
+      border-radius: var(--radius);
+      padding: 0.8rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: var(--shadow);
+      flex-wrap: wrap;
+    }
+
+    .task-info {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .task-info span {
+      font-weight: 500;
+    }
+
+    .meta {
+      font-size: 0.8rem;
+      color: gray;
+    }
+
+    .completed span {
+      text-decoration: line-through;
+      color: gray;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .complete-btn { background: var(--success); color: #fff; }
+    .edit-btn { background: #fbbf24; color: #000; }
+    .delete-btn { background: var(--danger); color: #fff; }
+
+    .filter-group {
+      margin: 1rem 0;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    #clearAll {
+      background: #ef4444;
+      color: white;
+      width: 100%;
+      margin-top: 0.5rem;
+    }
+
+    @keyframes fadeIn {
+      from {opacity: 0; transform: translateY(20px);}
+      to {opacity: 1; transform: translateY(0);}
+    }
+
+    @media (max-width: 480px) {
+      .input-group { flex-direction: column; }
+      .filter-group { flex-direction: column; }
+      #addBtn, #clearAll { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="todo-container">
+    <h1>📋 Advanced To-Do List</h1>
+
+    <div class="stats">
+      <div>Total: <span id="totalCount">0</span></div>
+      <div>Done: <span id="doneCount">0</span></div>
+      <div>Pending: <span id="pendingCount">0</span></div>
+    </div>
+
+    <div class="input-group">
+      <input type="text" id="taskInput" placeholder="Enter a task...">
+      <input type="date" id="dueDate">
+      <select id="priority">
+        <option value="Low">Low</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="High">High</option>
+      </select>
+      <button id="addBtn">Add Task</button>
+    </div>
+
+    <div class="filter-group">
+      <select id="filter">
+        <option value="all">All</option>
+        <option value="completed">Completed</option>
+        <option value="pending">Pending</option>
+      </select>
+      <input type="text" id="search" placeholder="Search task...">
+    </div>
+
+    <ul id="taskList"></ul>
+    <button id="clearAll">Clear All</button>
+  </div>
+
+  <script>
+    const taskInput = document.getElementById('taskInput');
+    const addBtn = document.getElementById('addBtn');
+    const dueDate = document.getElementById('dueDate');
+    const priority = document.getElementById('priority');
+    const taskList = document.getElementById('taskList');
+    const filter = document.getElementById('filter');
+    const search = document.getElementById('search');
+    const clearAll = document.getElementById('clearAll');
+    const totalCount = document.getElementById('totalCount');
+    const doneCount = document.getElementById('doneCount');
+    const pendingCount = document.getElementById('pendingCount');
+
+    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+    function saveTasks() {
+      localStorage.setItem('tasks', JSON.stringify(tasks));
+    }
+
+    function renderTasks() {
+      taskList.innerHTML = '';
+      let filtered = tasks.filter(t => {
+        if (filter.value === 'completed') return t.completed;
+        if (filter.value === 'pending') return !t.completed;
+        return true;
+      });
+
+      if (search.value.trim() !== '') {
+        filtered = filtered.filter(t => t.text.toLowerCase().includes(search.value.toLowerCase()));
+      }
+
+      filtered.forEach((task, index) => {
+        const li = document.createElement('li');
+        li.classList.toggle('completed', task.completed);
+
+        const info = document.createElement('div');
+        info.classList.add('task-info');
+        info.innerHTML = `<span>${task.text}</span><div class="meta">📅 ${task.due || 'No date'} | 🔥 ${task.priority}</div>`;
+
+        const actions = document.createElement('div');
+        actions.classList.add('actions');
+        actions.innerHTML = `
+          <button class="complete-btn">✓</button>
+          <button class="edit-btn">✎</button>
+          <button class="delete-btn">✕</button>
+        `;
+
+        actions.querySelector('.complete-btn').onclick = () => toggleTask(index);
+        actions.querySelector('.edit-btn').onclick = () => editTask(index);
+        actions.querySelector('.delete-btn').onclick = () => deleteTask(index);
+
+        li.append(info, actions);
+        taskList.appendChild(li);
+      });
+
+      updateStats();
+    }
+
+    function updateStats() {
+      const total = tasks.length;
+      const done = tasks.filter(t => t.completed).length;
+      totalCount.textContent = total;
+      doneCount.textContent = done;
+      pendingCount.textContent = total - done;
+    }
+
+    addBtn.onclick = () => {
+      const text = taskInput.value.trim();
+      if (!text) return alert('Enter task!');
+      tasks.push({
+        text,
+        due: dueDate.value,
+        priority: priority.value,
+        completed: false
+      });
+      saveTasks();
+      renderTasks();
+      taskInput.value = '';
+      dueDate.value = '';
+    };
+
+    function toggleTask(index) {
+      tasks[index].completed = !tasks[index].completed;
+      saveTasks();
+      renderTasks();
+    }
+
+    function editTask(index) {
+      const newText = prompt('Edit your task:', tasks[index].text);
+      if (newText !== null && newText.trim() !== '') {
+        tasks[index].text = newText;
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    function deleteTask(index) {
+      if (confirm('Delete this task?')) {
+        tasks.splice(index, 1);
+        saveTasks();
+        renderTasks();
+      }
+    }
+
+    clearAll.onclick = () => {
+      if (confirm('Clear all tasks?')) {
+        tasks = [];
+        saveTasks();
+        renderTasks();
+      }
+    };
+
+    filter.onchange = search.oninput = renderTasks;
+
+    renderTasks();
+  </script>
+</body>
+</html>
